@@ -14,7 +14,7 @@ export default function ProductCard({ product }: ProductCardProps) {
 
   return (
     <Link
-      href={"/products" + product.id}
+      href={"/products/" + product.id}
       className="card w-full bg-base-100 transition hover:shadow-xl"
     >
       <figure>
