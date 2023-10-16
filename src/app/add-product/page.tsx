@@ -1,6 +1,8 @@
 import prisma from "@/lib/db/prisma";
 import { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { getServerSession } from "next-auth";
+import { authOptions } from "../api/auth/[...nextauth]/route";
 
 import FormButton from "@/components/FormButton";
 
@@ -10,6 +12,10 @@ export const metadata: Metadata = {
 
 async function addProduct(formData: FormData) {
   "use server";
+
+  const session = await getServerSession(authOptions);
+
+  if (!session) redirect("/api/auth/sigin?callbackUrl=/add-product");
 
   const name = formData.get("name")?.toString();
   const description = formData.get("description")?.toString();
@@ -26,7 +32,11 @@ async function addProduct(formData: FormData) {
   redirect("/");
 }
 
-export default function addProductPage() {
+export default async function addProductPage() {
+  const session = await getServerSession(authOptions);
+
+  if (!session) redirect("/api/auth/sigin?callbackUrl=/add-product");
+
   return (
     <section className="">
       <h1 className="mb-3 text-lg font-bold">Add Product</h1>
