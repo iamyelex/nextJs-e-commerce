@@ -4,7 +4,7 @@ import { Metadata } from "next";
 import Image from "next/image";
 import PriceTag from "@/components/PriceTag";
 import { cache } from "react";
-import AddToCartButton from "./AddTocartButton";
+import AddToCartButton from "./AddToCartButton";
 import { increaseCartItem } from "./actions";
 
 type ProductPageProps = {
