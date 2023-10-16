@@ -1,6 +1,8 @@
 import prisma from "./prisma";
 import { cookies } from "next/dist/client/components/headers";
 import { Cart, Prisma } from "@prisma/client";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
 export type CartWithProducts = Prisma.CartGetPayload<{
   include: { items: { include: { product: true } } };
@@ -16,12 +18,22 @@ export type shoppingCart = CartWithProducts & {
 };
 
 export async function createCart(): Promise<shoppingCart> {
-  const newCart = await prisma.cart.create({
-    data: {},
-  });
+  const session = await getServerSession(authOptions);
 
-  //   saving the id of anonymous user so they can access cart and store data
-  cookies().set("localCartId", newCart.id);
+  let newCart: Cart;
+
+  if (session) {
+    newCart = await prisma.cart.create({
+      data: { userId: session.user.id },
+    });
+  } else {
+    newCart = await prisma.cart.create({
+      data: {},
+    });
+
+    //   saving the id of anonymous user so they can access cart and store data
+    cookies().set("localCartId", newCart.id);
+  }
 
   return {
     ...newCart,
@@ -32,15 +44,28 @@ export async function createCart(): Promise<shoppingCart> {
 }
 
 export async function getCart(): Promise<shoppingCart | null> {
-  const localCartId = cookies().get("localCartId")?.value;
-  //   getting the id back
-  const cart = localCartId
-    ? await prisma.cart.findUnique({
-        where: { id: localCartId },
-        // making sure it includes items and product model because they are handled seperateyly in db
-        include: { items: { include: { product: true } } },
-      })
-    : null;
+  const session = await getServerSession(authOptions);
+
+  let cart: CartWithProducts | null = null;
+
+  if (session) {
+    cart = await prisma.cart.findFirst({
+      where: { userId: session.user.id },
+      include: { items: { include: { product: true } } },
+    });
+  }
+
+  if (!session) {
+    const localCartId = cookies().get("localCartId")?.value;
+    //   getting the id back
+    cart = localCartId
+      ? await prisma.cart.findUnique({
+          where: { id: localCartId },
+          // making sure it includes items and product model because they are handled seperateyly in db
+          include: { items: { include: { product: true } } },
+        })
+      : null;
+  }
 
   if (!cart) return null;
 
