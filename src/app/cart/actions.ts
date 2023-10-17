@@ -36,54 +36,54 @@ export async function setProductQuantity(productId: string, quantity: number) {
 
   if (quantity === 0) {
     if (itemInCart) {
-      // await prisma.cartItem.delete({
-      //   where: { id: itemInCart.id },
-      // });
-
-      await prisma.cart.update({
-        where: { id: cart.id },
-        data: {
-          items: {
-            delete: { id: itemInCart.id },
-          },
-        },
+      await prisma.cartItem.delete({
+        where: { id: itemInCart.id },
       });
+
+      // await prisma.cart.update({
+      //   where: { id: cart.id },
+      //   data: {
+      //     items: {
+      //       delete: { id: itemInCart.id },
+      //     },
+      //   },
+      // });
     }
   } else {
     if (itemInCart) {
-      // await prisma.cartItem.update({
-      //   where: { id: itemInCart.id },
-      //   data: { quantity },
-      // });
-
-      await prisma.cart.update({
-        where: { id: cart.id },
-        data: {
-          items: {
-            update: {
-              where: { id: itemInCart.id },
-              data: { quantity },
-            },
-          },
-        },
+      await prisma.cartItem.update({
+        where: { id: itemInCart.id },
+        data: { quantity },
       });
-    } else {
-      // await prisma.cartItem.create({
+
+      // await prisma.cart.update({
+      //   where: { id: cart.id },
       //   data: {
-      //     cartId: cart.id,
-      //     productId,
-      //     quantity,
+      //     items: {
+      //       update: {
+      //         where: { id: itemInCart.id },
+      //         data: { quantity },
+      //       },
+      //     },
       //   },
       // });
-
-      await prisma.cart.update({
-        where: { id: cart.id },
+    } else {
+      await prisma.cartItem.create({
         data: {
-          items: {
-            create: { productId, quantity },
-          },
+          cartId: cart.id,
+          productId,
+          quantity,
         },
       });
+
+      // await prisma.cart.update({
+      //   where: { id: cart.id },
+      //   data: {
+      //     items: {
+      //       create: { productId, quantity },
+      //     },
+      //   },
+      // });
     }
   }
   revalidatePath("/cart");

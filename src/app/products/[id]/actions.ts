@@ -10,44 +10,44 @@ export async function increaseCartItem(productId: string) {
   const itemInCart = cart.items.find((item) => item.productId === productId);
 
   if (itemInCart) {
-    // await prisma.cartItem.update({
-    //   where: { id: itemInCart.id },
-    //   data: { quantity: { increment: 1 } },
-    // });
-
-    await prisma.cart.update({
-      where: { id: cart.id },
-      data: {
-        items: {
-          update: {
-            where: { id: itemInCart.id },
-            data: { quantity: { increment: 1 } },
-          },
-        },
-      },
+    await prisma.cartItem.update({
+      where: { id: itemInCart.id },
+      data: { quantity: { increment: 1 } },
     });
+
+    // await prisma.cart.update({
+    //   where: { id: cart.id },
+    //   data: {
+    //     items: {
+    //       update: {
+    //         where: { id: itemInCart.id },
+    //         data: { quantity: { increment: 1 } },
+    //       },
+    //     },
+    //   },
+    // });
   }
 
   if (!itemInCart) {
-    // await prisma.cartItem.create({
-    //   data: {
-    //     cartId: cart.id,
-    //     productId,
-    //     quantity: 1,
-    //   },
-    // });
-
-    await prisma.cart.update({
-      where: { id: cart.id },
+    await prisma.cartItem.create({
       data: {
-        items: {
-          create: {
-            productId,
-            quantity: 1,
-          },
-        },
+        cartId: cart.id,
+        productId,
+        quantity: 1,
       },
     });
+
+    // await prisma.cart.update({
+    //   where: { id: cart.id },
+    //   data: {
+    //     items: {
+    //       create: {
+    //         productId,
+    //         quantity: 1,
+    //       },
+    //     },
+    //   },
+    // });
   }
 
   revalidatePath("/products/[id]");
