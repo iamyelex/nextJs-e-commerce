@@ -1,6 +1,6 @@
 import prisma from "./prisma";
 import { cookies } from "next/dist/client/components/headers";
-import { Cart, Prisma } from "@prisma/client";
+import { Cart, CartItem, Prisma } from "@prisma/client";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
@@ -77,4 +77,77 @@ export async function getCart(): Promise<shoppingCart | null> {
       0,
     ),
   };
+}
+
+export async function mergeAnonymousAndUserCart(userId: string) {
+  const localCartId = cookies().get("localCartId")?.value;
+  //   getting the id back
+  const localCart = localCartId
+    ? await prisma.cart.findUnique({
+        where: { id: localCartId },
+        // making sure it includes items and product model because they are handled seperateyly in db
+        include: { items: true },
+      })
+    : null;
+
+  if (!localCart) return;
+
+  const userCart = await prisma.cart.findFirst({
+    where: { userId },
+    include: { items: true },
+  });
+
+  await prisma.$transaction(async (tx) => {
+    if (userCart) {
+      const mergedCartItems = mergeCartItems(localCart.items, userCart.items);
+
+      await tx.cartItem.deleteMany({
+        where: { cartId: userCart.id },
+      });
+
+      await tx.cartItem.createMany({
+        data: mergedCartItems.map((item) => ({
+          cartId: userCart.id,
+          quantity: item.quantity,
+          productId: item.productId,
+        })),
+      });
+    } else {
+      await tx.cart.create({
+        data: {
+          userId,
+          items: {
+            createMany: {
+              data: localCart.items.map((item) => ({
+                quantity: item.quantity,
+                productId: item.productId,
+              })),
+            },
+          },
+        },
+      });
+    }
+
+    await tx.cart.delete({
+      where: { id: localCart.id },
+    });
+
+    cookies().set("localCartId", "");
+  });
+}
+
+function mergeCartItems(...cartItems: CartItem[][]) {
+  return cartItems.reduce((acc, item) => {
+    item.forEach((item) => {
+      const existingItem = acc.find((i) => i.productId === item.productId);
+
+      if (existingItem) {
+        existingItem.quantity += item.quantity;
+      } else {
+        acc.push(item);
+      }
+    });
+
+    return acc;
+  }, [] as CartItem[]);
 }
