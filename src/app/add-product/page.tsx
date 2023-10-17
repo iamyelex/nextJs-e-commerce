@@ -1,4 +1,5 @@
 import prisma from "@/lib/db/prisma";
+
 import { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
