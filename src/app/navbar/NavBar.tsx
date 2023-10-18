@@ -27,7 +27,13 @@ export default async function NavBar() {
       <div className="navbar m-auto max-w-7xl flex-col gap-2 sm:flex-row">
         <div className="flex-1">
           <Link href="/" className="btn btn-ghost text-xl normal-case">
-            <Image src={logo} alt="Florian logo" height={40} width={40} />
+            <Image
+              src={logo}
+              alt="Florian logo"
+              height={40}
+              width={40}
+              placeholder="blur"
+            />
             <span>Florian</span>
           </Link>
         </div>
